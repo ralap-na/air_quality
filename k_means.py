@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 spark = SparkSession.builder.appName("final").getOrCreate()
 
 df = spark.read.csv("/home/cluster0/AirQualityUCI.csv", header=True, inferSchema=True, sep=";")
+
 # Drop the unwanted columns
 columns_to_drop = ["_c15", "_c16"]
 df = df.drop(*columns_to_drop)
@@ -19,15 +20,21 @@ columns_to_fix = ["CO(GT)", "C6H6(GT)", "T", "RH", "AH"]
 for col_name in columns_to_fix:
     df = df.withColumn(col_name, regexp_replace(col(col_name), ",", ".").cast("double"))
 
-df.show()
-
 # Replace special characters in column names
 cleaned_columns = [col.replace(".", "_") for col in df.columns]
 df = df.toDF(*cleaned_columns)
 df = df.replace(-200, None)
 df = df.na.drop()
 
-assembler = VectorAssembler(inputCols=["CO(GT)", "PT08_S1(CO)", "NMHC(GT)", "C6H6(GT)", "PT08_S2(NMHC)", "NOx(GT)", "PT08_S3(NOx)", "NO2(GT)", "PT08_S4(NO2)", "PT08_S5(O3)", "T", "RH", "AH"], outputCol="features")
+df = df.withColumn(
+    "Time", 
+    col("Time").substr(1, 2).cast("int")
+)
+
+df.show()
+df.printSchema()
+
+assembler = VectorAssembler(inputCols=["Time", "CO(GT)", "PT08_S1(CO)", "NMHC(GT)", "C6H6(GT)", "PT08_S2(NMHC)", "NOx(GT)", "PT08_S3(NOx)", "NO2(GT)", "PT08_S4(NO2)", "PT08_S5(O3)", "T", "RH", "AH"], outputCol="features")
 data_df = assembler.transform(df)
 
 scaler = StandardScaler(inputCol="features", outputCol="scaled_features")
@@ -57,7 +64,7 @@ plt.grid()
 plt.show()
 
 # Define the K-Means model with the optimal k value
-optimal_k = wssse.index(min(wssse))
+optimal_k = wssse.index(max(wssse)) + 2
 kmeans = KMeans(k=optimal_k, featuresCol="scaled_features", predictionCol="cluster")
 kmeans= kmeans.fit(data_df)
 
@@ -73,10 +80,37 @@ print(f"WSSSE: {wssse}")
 pandas_df = predictions.toPandas()
 
 # Visualizing the results
-plt.scatter(pandas_df["CO(GT)"], pandas_df["PT08_S1(CO)"], c=pandas_df["cluster"], cmap="rainbow")
+plt.scatter(pandas_df["CO(GT)"], pandas_df["Time"], c=pandas_df["cluster"], cmap="rainbow")
 plt.xlabel("CO(GT)")
-plt.ylabel("PT08_S1(CO)")
+plt.ylabel("Time")
 plt.title("K-Means Clustering")
 plt.colorbar().set_label("Cluster")
 plt.show()
-plt.savefig("/mnt/data/cluster.png")
+
+plt.scatter(pandas_df["NMHC(GT)"], pandas_df["Time"], c=pandas_df["cluster"], cmap="rainbow")
+plt.xlabel("NMHC(GT)")
+plt.ylabel("T")
+plt.title("K-Means Clustering")
+plt.colorbar().set_label("Cluster")
+plt.show()
+
+plt.scatter(pandas_df["C6H6(GT)"], pandas_df["Time"], c=pandas_df["cluster"], cmap="rainbow")
+plt.xlabel("C6H6(GT)")
+plt.ylabel("Time")
+plt.title("K-Means Clustering")
+plt.colorbar().set_label("Cluster")
+plt.show()
+
+plt.scatter(pandas_df["NOx(GT)"], pandas_df["Time"], c=pandas_df["cluster"], cmap="rainbow")
+plt.xlabel("NOx(GT)")
+plt.ylabel("Time")
+plt.title("K-Means Clustering")
+plt.colorbar().set_label("Cluster")
+plt.show()
+
+plt.scatter(pandas_df["NO2(GT)"], pandas_df["Time"], c=pandas_df["cluster"], cmap="rainbow")
+plt.xlabel("NO2(GT)")
+plt.ylabel("Time")
+plt.title("K-Means Clustering")
+plt.colorbar().set_label("Cluster")
+plt.show()
