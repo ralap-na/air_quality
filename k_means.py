@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 
 spark = SparkSession.builder.appName("final").getOrCreate()
 
-df = spark.read.csv("/home/cluster0/AirQualityUCI.csv", header=True, inferSchema=True, sep=";")
+df = spark.read.csv("hdfs://master:9000/final/AirQualityUCI.csv", header=True, inferSchema=True, sep=";")
 
 # Drop the unwanted columns
 columns_to_drop = ["_c15", "_c16"]
@@ -32,7 +32,6 @@ df = df.withColumn(
 )
 
 df.show()
-df.printSchema()
 
 assembler = VectorAssembler(inputCols=["Time", "CO(GT)", "PT08_S1(CO)", "NMHC(GT)", "C6H6(GT)", "PT08_S2(NMHC)", "NOx(GT)", "PT08_S3(NOx)", "NO2(GT)", "PT08_S4(NO2)", "PT08_S5(O3)", "T", "RH", "AH"], outputCol="features")
 data_df = assembler.transform(df)
@@ -43,8 +42,8 @@ data_df = scaler_model.transform(data_df)
 
 data_df.show()
 
-# Computing WSSSE for k calues from 2 to 20
-wssse = []
+# Computing Silhouette for k calues from 2 to 20
+Silhouette = []
 evaluator = ClusteringEvaluator(predictionCol="prediction", featuresCol="scaled_features", \
                                  metricName="silhouette", distanceMeasure="squaredEuclidean")
 for i in range(2, 21):
@@ -52,19 +51,19 @@ for i in range(2, 21):
     KMeans_fit = kmeans_mod.fit(data_df)
     predictions = KMeans_fit.transform(data_df)
     score = evaluator.evaluate(predictions)
-    wssse.append(score)
+    Silhouette.append(score)
     print("Silhouette Score: ", score)
 
 # Plotting the WSSSE values
-plt.plot(range(2, 21), wssse)
+plt.plot(range(2, 21), Silhouette)
 plt.xlabel("Number of Clusters")
 plt.ylabel("Within Set Sum of Squared Errors(WSSSE)")
 plt.title("Elbow Method for Optimal k")
 plt.grid()
-plt.show()
+plt.savefig('/opt/share/final/wssse.png')
 
 # Define the K-Means model with the optimal k value
-optimal_k = wssse.index(max(wssse)) + 2
+optimal_k = Silhouette.index(max(Silhouette)) + 2
 kmeans = KMeans(k=optimal_k, featuresCol="scaled_features", predictionCol="cluster")
 kmeans= kmeans.fit(data_df)
 
@@ -73,44 +72,44 @@ predictions = kmeans.transform(data_df)
 predictions.show()
 
 output = KMeans_fit.transform(data_df)
-wssse = evaluator.evaluate(output)
-print(f"WSSSE: {wssse}")
+Silhouette = evaluator.evaluate(output)
+print(f"WSSSE: {Silhouette}")
 
 # Converting to Pandas dataframe
 pandas_df = predictions.toPandas()
 
 # Visualizing the results
-plt.scatter(pandas_df["CO(GT)"], pandas_df["Time"], c=pandas_df["cluster"], cmap="rainbow")
+plt.scatter(pandas_df["CO(GT)"], pandas_df["T"], c=pandas_df["cluster"], cmap="rainbow")
 plt.xlabel("CO(GT)")
-plt.ylabel("Time")
+plt.ylabel("T")
 plt.title("K-Means Clustering")
 plt.colorbar().set_label("Cluster")
-plt.show()
+plt.savefig('/opt/share/final/co_t.png')
 
-plt.scatter(pandas_df["NMHC(GT)"], pandas_df["Time"], c=pandas_df["cluster"], cmap="rainbow")
+plt.scatter(pandas_df["NMHC(GT)"], pandas_df["T"], c=pandas_df["cluster"], cmap="rainbow")
 plt.xlabel("NMHC(GT)")
 plt.ylabel("T")
 plt.title("K-Means Clustering")
 plt.colorbar().set_label("Cluster")
-plt.show()
+plt.savefig('/opt/share/final/nmhc_t.png')
 
-plt.scatter(pandas_df["C6H6(GT)"], pandas_df["Time"], c=pandas_df["cluster"], cmap="rainbow")
+plt.scatter(pandas_df["C6H6(GT)"], pandas_df["T"], c=pandas_df["cluster"], cmap="rainbow")
 plt.xlabel("C6H6(GT)")
-plt.ylabel("Time")
+plt.ylabel("T")
 plt.title("K-Means Clustering")
 plt.colorbar().set_label("Cluster")
-plt.show()
+plt.savefig('/opt/share/final/c6h6_t.png')
 
-plt.scatter(pandas_df["NOx(GT)"], pandas_df["Time"], c=pandas_df["cluster"], cmap="rainbow")
+plt.scatter(pandas_df["NOx(GT)"], pandas_df["T"], c=pandas_df["cluster"], cmap="rainbow")
 plt.xlabel("NOx(GT)")
-plt.ylabel("Time")
+plt.ylabel("T")
 plt.title("K-Means Clustering")
 plt.colorbar().set_label("Cluster")
-plt.show()
+plt.savefig('/opt/share/final/nox_t.png')
 
-plt.scatter(pandas_df["NO2(GT)"], pandas_df["Time"], c=pandas_df["cluster"], cmap="rainbow")
+plt.scatter(pandas_df["NO2(GT)"], pandas_df["T"], c=pandas_df["cluster"], cmap="rainbow")
 plt.xlabel("NO2(GT)")
-plt.ylabel("Time")
+plt.ylabel("T")
 plt.title("K-Means Clustering")
 plt.colorbar().set_label("Cluster")
-plt.show()
+plt.savefig('/opt/share/final/no2_t.png')
