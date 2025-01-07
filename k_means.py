@@ -63,7 +63,7 @@ def generateKMeansPictures(df):
     plt.ylabel("Within Set Sum of Squared Errors(WSSSE)")
     plt.title("Elbow Method for Optimal k")
     plt.grid()
-    plt.savefig('/opt/share/final/wssse.png')
+    plt.savefig('hdfs://master:9000/final/output/wssse.png')
 
     # Define the K-Means model with the optimal k value
     optimal_k = Silhouette.index(max(Silhouette)) + 2
@@ -87,34 +87,34 @@ def generateKMeansPictures(df):
     plt.ylabel("T")
     plt.title("K-Means Clustering")
     plt.colorbar().set_label("Cluster")
-    plt.savefig('/opt/share/final/co_t.png')
+    plt.savefig('hdfs://master:9000/final/output/co_t.png')
 
     plt.scatter(pandas_df["NMHC(GT)"], pandas_df["T"], c=pandas_df["cluster"], cmap="rainbow")
     plt.xlabel("NMHC(GT)")
     plt.ylabel("T")
     plt.title("K-Means Clustering")
     plt.colorbar().set_label("Cluster")
-    plt.savefig('/opt/share/final/nmhc_t.png')
+    plt.savefig('hdfs://master:9000/final/output/nmhc_t.png')
 
     plt.scatter(pandas_df["C6H6(GT)"], pandas_df["T"], c=pandas_df["cluster"], cmap="rainbow")
     plt.xlabel("C6H6(GT)")
     plt.ylabel("T")
     plt.title("K-Means Clustering")
     plt.colorbar().set_label("Cluster")
-    plt.savefig('/opt/share/final/c6h6_t.png')
+    plt.savefig('hdfs://master:9000/final/output/c6h6_t.png')
 
     plt.scatter(pandas_df["NOx(GT)"], pandas_df["T"], c=pandas_df["cluster"], cmap="rainbow")
     plt.xlabel("NOx(GT)")
     plt.ylabel("T")
     plt.title("K-Means Clustering")
     plt.colorbar().set_label("Cluster")
-    plt.savefig('/opt/share/final/nox_t.png')
+    plt.savefig('hdfs://master:9000/final/output/nox_t.png')
 
     plt.scatter(pandas_df["NO2(GT)"], pandas_df["T"], c=pandas_df["cluster"], cmap="rainbow")
     plt.xlabel("NO2(GT)")
     plt.ylabel("T")
     plt.title("K-Means Clustering")
     plt.colorbar().set_label("Cluster")
-    plt.savefig('/opt/share/final/no2_t.png')
+    plt.savefig('hdfs://master:9000/final/output/no2_t.png')
 
 __all__ = ['k_means'] 

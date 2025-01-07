@@ -80,7 +80,7 @@ def create_relative_pic(df, col1, col2, col3, col4, col5):
     plt.gca().yaxis.set_major_locator(MaxNLocator(integer=True, prune='lower', nbins=10))
 
     plt.tight_layout()
-    plt.savefig('/opt/share/final/' + col1 + ".png")
+    plt.savefig('hdfs://master:9000/final/output/' + col1 + ".png")
 
 def heatMap(df):
     df_cleaned = replaceInvalid(df)
@@ -92,6 +92,6 @@ def heatMap(df):
 
     sns.heatmap(df_haep.corr(), annot=True, cmap='coolwarm', fmt='.2f', linewidths=0.5)
 
-    plt.savefig('/opt/share/final/heatmap.png')
+    plt.savefig('hdfs://master:9000/final/output/heatmap.png')
 
 __all__ = ['heatMap', 'coRelativePic'] 
